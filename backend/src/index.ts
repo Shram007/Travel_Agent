@@ -25,9 +25,12 @@ app.get('/health', (_req, res) => {
 // import { exaRouter } from './exa/routes.js';
 // app.use('/api/exa', exaRouter);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Wandr backend running on http://localhost:${PORT}`);
-  console.log(`   Exa API key: ${process.env.EXA_API_KEY ? '✅ loaded' : '❌ missing (add to backend/.env)'}`);
-});
+// Only run the server locally. Vercel handles this in production.
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Wandr backend running on http://localhost:${PORT}`);
+    console.log(`   Exa API key: ${process.env.EXA_API_KEY ? '✅ loaded' : '❌ missing (add to backend/.env)'}`);
+  });
+}
 
 export default app;
