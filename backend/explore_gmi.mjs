@@ -3,18 +3,13 @@
  * Testing GMI Cloud Serverless Endpoint (OpenAI-compatible).
  */
 
-import { readFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dir = dirname(fileURLToPath(import.meta.url));
-const envPath = resolve(__dir, '../.env');
-try {
-  readFileSync(envPath, 'utf8').split('\n').forEach(line => {
-    const [k, ...v] = line.replace(/\r/, '').split('=');
-    if (k && !k.startsWith('#') && v.length) process.env[k.trim()] = v.join('=').trim();
-  });
-} catch { /* ignore */ }
+import fetch from 'node-fetch';
+if (!globalThis.fetch) {
+  globalThis.fetch = fetch;
+  globalThis.Headers = fetch.Headers;
+  globalThis.Request = fetch.Request;
+  globalThis.Response = fetch.Response;
+}
 
 const GMI_API_KEY = process.env.GMI_API_KEY;
 
@@ -24,7 +19,7 @@ if (!GMI_API_KEY) {
 }
 
 // GMI Cloud provides an OpenAI-compatible API endpoint
-const GMI_BASE_URL = 'https://api.gmicloud.ai/v1'; // Assuming standard OpenAI compatible URL, will test
+const GMI_BASE_URL = 'https://api.gmi-serving.com/v1'; // Standard OpenAI compatible URL
 // Let's check their model list first
 async function getModels() {
   try {

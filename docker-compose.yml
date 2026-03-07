@@ -4,6 +4,7 @@
 # Requires a .env file in the project root with:
 #   GEMINI_API_KEY=...
 #   EXA_API_KEY=...
+#   GMI_API_KEY=...
 
 services:
   backend:
@@ -11,9 +12,13 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      - "8080:8080"
+      - "3001:8080"
     env_file:
       - .env
+    environment:
+      - NODE_ENV=production
+      - EXA_API_KEY=${EXA_API_KEY}
+      - GMI_API_KEY=${GMI_API_KEY}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
@@ -28,6 +33,7 @@ services:
       args:
         GEMINI_API_KEY: ${GEMINI_API_KEY}
         EXA_API_KEY: ${EXA_API_KEY}
+        GMI_API_KEY: ${GMI_API_KEY}
     ports:
       - "80:80"
     depends_on:

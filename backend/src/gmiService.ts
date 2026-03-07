@@ -4,9 +4,10 @@
  */
 
 import 'dotenv/config';
+import fetch from 'node-fetch';
 
 const GMI_API_KEY = process.env.GMI_API_KEY || '';
-const GMI_BASE_URL = 'https://api.gmicloud.ai/v1';
+const GMI_BASE_URL = 'https://api.gmi-serving.com/v1';
 const DEFAULT_MODEL = 'llama-3-70b-instruct'; // Can be configured later
 
 export interface ChatSuggestionResult {
@@ -26,7 +27,7 @@ export async function getTravelSuggestions(userPrompt: string): Promise<ChatSugg
 
   const systemMessage = `You are a world-class travel agent. The user will ask for travel recommendations.
 You must respond with EXACTLY 5 recommendations and EXACTLY 1 follow-up question.
-Format your response exactly like this:
+Do NOT output any thinking, reasoning, or preamble. Output ONLY the following format perfectly:
 
 RECOMMENDATIONS:
 1. City, Country - Brief description of why they should go here.
