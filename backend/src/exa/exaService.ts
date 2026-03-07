@@ -58,7 +58,7 @@ export async function searchDestinationInfo(
   const exa = getExaClient();
   const { numResults = 5, maxHighlightChars = 512 } = options;
 
-  const query = `Best things to do in ${city}, ${country} — travel guide highlights activities food`;
+  const query = city;
 
   const result = await exa.search(query, {
     type: 'auto',          // let Exa decide neural vs keyword
@@ -94,7 +94,7 @@ export async function searchHotels(
   const exa = getExaClient();
   const { numResults = 5, maxHighlightChars = 400 } = options;
 
-  const query = `Best hotels to stay in ${city}, ${country} — top-rated accommodation recommendations`;
+  const query = city;
 
   const result = await exa.search(query, {
     type: 'auto',
@@ -131,7 +131,7 @@ export async function searchFlightInfo(
   const exa = getExaClient();
   const { numResults = 4, maxHighlightChars = 400 } = options;
 
-  const query = `Flights from ${origin} to ${destination} ${country} — best airlines prices travel tips`;
+  const query = destination;
 
   const result = await exa.search(query, {
     type: 'auto',
