@@ -1,41 +1,106 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-serif: "Cormorant Garamond", serif;
-  --font-mono: "JetBrains Mono", monospace;
-  
-  --color-parchment: #F4E4BC;
-  --color-charcoal: #2C2C2C;
-  --color-blueprint: #1A2A3A;
-  --color-ocean: #D4E4E6;
-  --color-land: #E8D8B0;
-  --color-ink: #5C5C5C;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+
+  --color-primary: #2383E2;
+  --color-primary-dark: #1A6DBE;
+  --color-primary-light: #80CAFF;
+
+  --color-accent: #D9730D;
+  --color-accent-light: #FADEC9;
+  --color-success: #0F7B6C;
+  --color-warning: #CB912F;
+  --color-danger: #E03E3E;
+
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F7F6F3;
+  --color-surface-dark: #191919;
+  --color-border: #E9E9E7;
+  --color-text: #37352F;
+  --color-text-secondary: #9B9A97;
+  --color-text-inverse: #FFFFFF;
+
+  --color-ocean: #D3E5EF;
+  --color-land: #F1F0EE;
+  --color-land-hover: #E9E9E7;
+  --color-land-selected: #D3E5EF;
+
+  --color-xp: #6940A5;
+  --color-badge: #CB912F;
 }
 
 @layer base {
   body {
-    @apply bg-parchment text-charcoal font-serif overflow-hidden;
+    @apply bg-surface text-text font-sans overflow-hidden antialiased;
   }
 }
 
-.archival-grain {
-  position: relative;
+/* Notion-style panels — solid white, subtle border, minimal shadow */
+.notion-panel {
+  @apply bg-white border border-border shadow-sm;
 }
 
-.archival-grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
-  opacity: 0.15;
-  pointer-events: none;
-  z-index: 50;
+.notion-sidebar {
+  @apply bg-white border-l border-border;
 }
 
-.blueprint-grid-dark {
-  background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
+.flight-arc-glow {
+  filter: drop-shadow(0 0 6px var(--color-primary));
+}
+
+.deal-pulse {
+  animation: deal-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes deal-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes ping-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.typing-dot {
+  animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+/* Slider styling */
+.slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.slider-input::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
 }
