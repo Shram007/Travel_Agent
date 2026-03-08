@@ -18,7 +18,7 @@ COPY backend/package.json backend/package-lock.json* ./
 RUN npm ci
 COPY backend/tsconfig.json ./
 COPY backend/src ./src
-RUN npx tsc --outDir dist || true
+RUN npx tsc --outDir dist
 
 # ── Production image ─────────────────────────────────────────────
 FROM base AS runner

@@ -19,8 +19,12 @@ FROM deps AS builder
 # Pass them as build args from CI/CD or docker build command
 ARG GEMINI_API_KEY=""
 ARG EXA_API_KEY=""
+ARG VITE_API_URL=""
+ARG GMI_API_KEY=""
 ENV GEMINI_API_KEY=$GEMINI_API_KEY
 ENV EXA_API_KEY=$EXA_API_KEY
+ENV VITE_API_URL=$VITE_API_URL
+ENV GMI_API_KEY=$GMI_API_KEY
 
 COPY . .
 RUN npm run build

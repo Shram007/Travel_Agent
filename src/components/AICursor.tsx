@@ -35,11 +35,12 @@ interface AICursorSVGProps {
 }
 
 export const AICursorSVG: React.FC<AICursorSVGProps> = ({ projX, projY, k }) => {
-  const r = 14 / k;        // outer pulse radius
-  const rMid = 8 / k;      // middle ring
-  const dot = 3.5 / k;     // center dot
-  const arm = 18 / k;      // crosshair arm length
-  const armGap = 5 / k;    // gap before arm starts
+  const safeK = Number(k) || 1;
+  const r = Math.max(0.1, 14 / safeK) || 14;        // outer pulse radius
+  const rMid = Math.max(0.1, 8 / safeK) || 8;      // middle ring
+  const dot = Math.max(0.1, 3.5 / safeK) || 3.5;     // center dot
+  const arm = Math.max(0.1, 18 / safeK) || 18;      // crosshair arm length
+  const armGap = Math.max(0.1, 5 / safeK) || 5;    // gap before arm starts
 
   return (
     <motion.g
@@ -55,8 +56,8 @@ export const AICursorSVG: React.FC<AICursorSVGProps> = ({ projX, projY, k }) => 
         r={r}
         fill="none"
         stroke="#2D7A5F"
-        strokeWidth={1 / k}
-        animate={{ r: [r, r * 1.9, r], opacity: [0.5, 0, 0.5] }}
+        strokeWidth={1 / safeK}
+        animate={{ r: [r, Math.max(0.1, r * 1.9), r], opacity: [0.5, 0, 0.5] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
       />
 
@@ -65,13 +66,13 @@ export const AICursorSVG: React.FC<AICursorSVGProps> = ({ projX, projY, k }) => 
         r={r * 0.7}
         fill="none"
         stroke="#2D7A5F"
-        strokeWidth={0.8 / k}
-        animate={{ r: [r * 0.7, r * 1.5, r * 0.7], opacity: [0.35, 0, 0.35] }}
+        strokeWidth={0.8 / safeK}
+        animate={{ r: [r * 0.7, Math.max(0.1, r * 1.5), r * 0.7], opacity: [0.35, 0, 0.35] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
       />
 
       {/* Middle solid ring */}
-      <circle r={rMid} fill="none" stroke="#2D7A5F" strokeWidth={1.2 / k} opacity={0.8} />
+      <circle r={rMid} fill="none" stroke="#2D7A5F" strokeWidth={1.2 / safeK} opacity={0.8} />
 
       {/* Crosshair arms — N, S, E, W */}
       {[0, 90, 180, 270].map((deg) => {
@@ -86,7 +87,7 @@ export const AICursorSVG: React.FC<AICursorSVGProps> = ({ projX, projY, k }) => 
             x1={x1} y1={y1}
             x2={x2} y2={y2}
             stroke="#2D7A5F"
-            strokeWidth={1 / k}
+            strokeWidth={1 / safeK}
             opacity={0.7}
             strokeLinecap="round"
           />
@@ -94,7 +95,7 @@ export const AICursorSVG: React.FC<AICursorSVGProps> = ({ projX, projY, k }) => 
       })}
 
       {/* Center dot */}
-      <circle r={dot} fill="#F5F2ED" stroke="#2D7A5F" strokeWidth={1 / k} />
+      <circle r={dot} fill="#F5F2ED" stroke="#2D7A5F" strokeWidth={1 / safeK} />
 
       {/* Inner dot */}
       <circle r={dot * 0.4} fill="#2D7A5F" />

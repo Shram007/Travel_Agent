@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -14,8 +9,15 @@ import {
   Compass,
   Tag,
   Plane,
+  Sparkles,
+  Hotel,
+  Activity,
+  ChevronRight,
+  Info,
+  Loader2,
 } from 'lucide-react';
 import { Destination } from '../data/destinations';
+import { fetchLiveDestinationData, DestinationBrief } from '../services/travelService';
 
 interface DetailPanelProps {
   destination: Destination | null;
@@ -52,13 +54,31 @@ function flightTimeLabel(hours: number): string {
 }
 
 export const DetailPanel: React.FC<DetailPanelProps> = ({
-  destination,
+  destination: dest,
   isSelected,
   onClose,
   onAddToTrip,
   onRemoveFromTrip,
 }) => {
-  const dest = destination;
+  const [liveData, setLiveData] = useState<DestinationBrief | null>(null);
+  const [isLoadingLive, setIsLoadingLive] = useState(false);
+
+  useEffect(() => {
+    if (dest) {
+      setLiveData(null);
+      setIsLoadingLive(true);
+      
+      // Fetch live insights from our backend (Exa integration)
+      fetchLiveDestinationData(dest.name, dest.country)
+        .then(data => {
+          setLiveData(data);
+          setIsLoadingLive(false);
+        })
+        .catch(() => {
+          setIsLoadingLive(false);
+        });
+    }
+  }, [dest]);
 
   return (
     <AnimatePresence>
@@ -113,12 +133,80 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
             className="flex-1 overflow-y-auto px-6 py-5 space-y-6"
             style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,26,26,0.08) transparent' }}
           >
+            {/* Live Insights Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={14} className="text-amber-500" />
+                  <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink/50 font-bold">
+                    Live Insights (Exa AI)
+                  </p>
+                </div>
+                {isLoadingLive && <Loader2 size={12} className="animate-spin text-ink/20" />}
+              </div>
+
+              {liveData ? (
+                <div className="space-y-4">
+                  {/* AI Summary */}
+                  <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-4">
+                    <p className="text-[13px] leading-relaxed text-ink/80 italic">
+                      "{liveData.summary}"
+                    </p>
+                  </div>
+
+                  {/* Top Activities */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-ink/40">
+                      <Activity size={12} />
+                      <span className="font-mono text-[8px] uppercase tracking-widest">Recommended Activities</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {liveData.activities.map((act, i) => (
+                        <div key={i} className="flex items-start gap-2 bg-ink/[0.02] border border-ink/[0.04] p-2 rounded-lg">
+                          <ChevronRight size={12} className="text-ink/20 mt-0.5 flex-shrink-0" />
+                          <span className="text-[12px] text-ink/70">{act}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Top Hotels */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-ink/40">
+                      <Hotel size={12} />
+                      <span className="font-mono text-[8px] uppercase tracking-widest">Hotels & Stays</span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {liveData.hotels.map((hotel, i) => (
+                        <div key={i} className="bg-ink/[0.03] border border-ink/[0.05] p-3 rounded-xl flex justify-between items-start">
+                          <div className="space-y-0.5">
+                            <p className="text-[12px] font-bold text-ink/80">{hotel.name}</p>
+                            <p className="text-[10px] text-ink/50 line-clamp-1">{hotel.description}</p>
+                          </div>
+                          <span className="font-mono text-[9px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                            {hotel.price}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : !isLoadingLive && (
+                <div className="bg-ink/[0.02] border border-dashed border-ink/[0.1] p-6 rounded-2xl flex flex-col items-center text-center gap-2">
+                  <Info size={16} className="text-ink/20" />
+                  <p className="text-[11px] text-ink/40 font-mono">Select a destination to fetch real-time data from Exa Search.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="h-px bg-ink/[0.06]" />
+
             {/* Description */}
             <div className="space-y-2">
               <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-ink/35">
-                About
+                About (Archival)
               </p>
-              <p className="font-serif text-base leading-relaxed text-ink/75 italic">
+              <p className="font-serif text-base leading-relaxed text-ink/75">
                 {dest.description}
               </p>
             </div>

@@ -281,9 +281,9 @@ export const Map: React.FC<MapProps> = ({
 
         <g ref={gRef}>
           {/* Land */}
-          {countries.map((feature: any) => (
+          {countries.map((feature: any, idx: number) => (
             <path
-              key={feature.id}
+              key={feature.id || `country-${idx}`}
               d={pathGen(feature) ?? ''}
               fill="url(#land-grad)"
               stroke="none"
@@ -291,10 +291,10 @@ export const Map: React.FC<MapProps> = ({
           ))}
 
           {/* Borders */}
-          <path d={borders} fill="none" stroke="#C4B89A" strokeWidth={0.6 / k} strokeOpacity={0.9} />
+          <path d={borders} fill="none" stroke="#C4B89A" strokeWidth={0.6 / (k || 1)} strokeOpacity={0.9} />
 
           {/* Graticule */}
-          <path d={graticule} fill="none" stroke="#B8CCDA" strokeWidth={0.35 / k} strokeOpacity={0.5} />
+          <path d={graticule} fill="none" stroke="#B8CCDA" strokeWidth={0.35 / (k || 1)} strokeOpacity={0.5} />
 
           {/* Region labels */}
           {REGION_LABELS.map((r) => {
@@ -308,9 +308,9 @@ export const Map: React.FC<MapProps> = ({
                 textAnchor="middle"
                 fill="#8B7B5C"
                 fillOpacity={0.35}
-                fontSize={10 / k}
+                fontSize={10 / (k || 1)}
                 fontFamily="'JetBrains Mono', monospace"
-                letterSpacing={2 / k}
+                letterSpacing={2 / (k || 1)}
                 style={{ userSelect: 'none', pointerEvents: 'none' }}
               >
                 {r.label}
@@ -324,8 +324,8 @@ export const Map: React.FC<MapProps> = ({
               d={routePathD}
               fill="none"
               stroke="#C9A84C"
-              strokeWidth={1.8 / k}
-              strokeDasharray={`${7 / k} ${4 / k}`}
+              strokeWidth={1.8 / (k || 1)}
+              strokeDasharray={`${7 / (k || 1)} ${4 / (k || 1)}`}
               strokeLinecap="round"
               opacity={0.85}
             />
@@ -339,8 +339,8 @@ export const Map: React.FC<MapProps> = ({
                 d={arc.path}
                 fill="none"
                 stroke="#2D7A5F"
-                strokeWidth={1.5 / k}
-                strokeDasharray={`${5 / k} ${3 / k}`}
+                strokeWidth={1.5 / (k || 1)}
+                strokeDasharray={`${5 / (k || 1)} ${3 / (k || 1)}`}
                 strokeLinecap="round"
                 opacity={0.7}
               />
@@ -367,7 +367,8 @@ export const Map: React.FC<MapProps> = ({
             const isFocused = focusedId === dest.id;
             const showLabel = isHovered || isSelected || isFocused;
 
-            const r = (isHovered || isFocused ? 6 : isSelected ? 5.5 : isSuggested ? 5 : 4) / k;
+            const safeK = Number(k) || 1;
+            const r = Math.max(0.1, ((isHovered || isFocused ? 6 : isSelected ? 5.5 : isSuggested ? 5 : 4) / safeK)) || 4;
 
             return (
               <g
@@ -380,17 +381,17 @@ export const Map: React.FC<MapProps> = ({
               >
                 {/* Suggested pulse ring */}
                 {isSuggested && !isSelected && (
-                  <circle r={11 / k} fill="none" stroke="#2D7A5F" strokeWidth={1 / k} opacity={0.35} />
+                  <circle r={Math.max(0.1, 11 / safeK)} fill="none" stroke="#2D7A5F" strokeWidth={1 / safeK} opacity={0.35} />
                 )}
 
                 {/* Selected outer ring */}
                 {isSelected && (
-                  <circle r={9 / k} fill="none" stroke="#C9A84C" strokeWidth={1.5 / k} opacity={0.6} />
+                  <circle r={Math.max(0.1, 9 / safeK)} fill="none" stroke="#C9A84C" strokeWidth={1.5 / safeK} opacity={0.6} />
                 )}
 
                 {/* Focus ring */}
                 {isFocused && !isSelected && (
-                  <circle r={9 / k} fill="none" stroke="#C9A84C" strokeWidth={1 / k} opacity={0.5} />
+                  <circle r={Math.max(0.1, 9 / safeK)} fill="none" stroke="#C9A84C" strokeWidth={1 / safeK} opacity={0.5} />
                 )}
 
                 {/* Main dot */}
@@ -404,10 +405,10 @@ export const Map: React.FC<MapProps> = ({
                 {showLabel && (
                   <text
                     x={0}
-                    y={-(r + 6 / k)}
+                    y={-(r + 6 / (k || 1))}
                     textAnchor="middle"
                     fill={isSelected ? '#C9A84C' : '#1A1A1A'}
-                    fontSize={9 / k}
+                    fontSize={9 / (k || 1)}
                     fontFamily="'JetBrains Mono', monospace"
                     fontWeight={isSelected ? '600' : '400'}
                     style={{ pointerEvents: 'none', userSelect: 'none' }}
