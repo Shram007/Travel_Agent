@@ -144,6 +144,72 @@ const LandmarkMarker = React.memo(({
   );
 });
 
+// Memoized Map Roamer (Animated Agent)
+const MapRoamer = React.memo(({ projection, landmarks, k }: {
+  projection: d3.GeoProjection | null,
+  landmarks: Landmark[],
+  k: number
+}) => {
+  const [targetPos, setTargetPos] = React.useState({ x: 500, y: 500 });
+  const [isFacingRight, setIsFacingRight] = React.useState(true);
+
+  useEffect(() => {
+    if (!projection) return;
+    const initCoords = projection([0, 20]);
+    if (initCoords) setTargetPos({ x: initCoords[0], y: initCoords[1] });
+
+    const moveAgent = () => {
+      let nextX = 500; let nextY = 500;
+      // 60% chance to visit a random location, 40% chance to visit a landmark
+      if (landmarks.length > 0 && Math.random() > 0.6) {
+        const target = landmarks[Math.floor(Math.random() * landmarks.length)];
+        const coords = projection([target.longitude, target.latitude]);
+        if (coords) { nextX = coords[0]; nextY = coords[1]; }
+      } else {
+        const lng = (Math.random() * 320) - 160;
+        const lat = (Math.random() * 120) - 60; 
+        const coords = projection([lng, lat]);
+        if (coords) { nextX = coords[0]; nextY = coords[1]; }
+      }
+      setTargetPos(prev => {
+        setIsFacingRight(nextX >= prev.x);
+        return { x: nextX, y: nextY };
+      });
+    };
+
+    const interval = setInterval(moveAgent, 8000);
+    // Initial movement trigger
+    setTimeout(moveAgent, 1000);
+    return () => clearInterval(interval);
+  }, [projection, landmarks]);
+
+  if (!projection) return null;
+
+  return (
+    <motion.g
+      initial={false}
+      animate={{ x: targetPos.x, y: targetPos.y }}
+      transition={{ duration: 7, ease: "easeInOut" }}
+      className="pointer-events-none"
+    >
+      <motion.g 
+        animate={{ scaleX: (isFacingRight ? 1 : -1) * (1 / (k || 1)), scaleY: 1 / (k || 1) }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+      >
+        <g transform="translate(0, -10)">
+          <text x="0" y="0" dominantBaseline="middle" textAnchor="middle" fontSize="20px" style={{ filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.5))' }}>
+            🛸
+          </text>
+          {/* Scanning Beam */}
+          <path d="M -6 6 L -16 30 L 16 30 L 6 6 Z" fill="url(#ufo-beam)" opacity="0.6">
+            <animate attributeName="opacity" values="0.1;0.8;0.1" dur="2s" repeatCount="indefinite" />
+          </path>
+        </g>
+      </motion.g>
+    </motion.g>
+  );
+});
+
 export const Map = React.memo(({ 
   landmarks, 
   onSelectLandmark,
@@ -502,6 +568,12 @@ export const Map = React.memo(({
   return (
     <div ref={containerRef} className="w-full h-full relative archival-grain bg-[#F1DAAD] overflow-hidden">
       <svg ref={svgRef} className="w-full h-full cursor-grab active:cursor-grabbing">
+        <defs>
+          <linearGradient id="ufo-beam" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#06B6D4" stopOpacity="0" />
+          </linearGradient>
+        </defs>
         <g transform={currentTransform.toString()}>
           {/* Ocean background - cover a huge area in projection units */}
           <rect
@@ -537,6 +609,15 @@ export const Map = React.memo(({
             {/* We could render procedural details here if needed, 
                 but for now let's focus on alignment */}
           </g>
+          
+          {/* Animated Agent */}
+          {isValidated && (
+            <MapRoamer 
+              projection={projection} 
+              landmarks={visibleLandmarks} 
+              k={currentTransform.k} 
+            />
+          )}
         </g>
       </svg>
       
