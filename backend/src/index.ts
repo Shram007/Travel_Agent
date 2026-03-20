@@ -24,6 +24,7 @@ app.get('/health', (_req, res) => {
     service: 'wandr-backend',
     exa: !!process.env.EXA_API_KEY && process.env.EXA_API_KEY !== 'MY_EXA_API_KEY',
     gmi: !!process.env.GMI_API_KEY && process.env.GMI_API_KEY !== 'MY_GMI_API_KEY',
+    gemini: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY',
   });
 });
 
@@ -37,12 +38,14 @@ if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🚀 Wandr backend running on http://localhost:${PORT}`);
     console.log(`   Exa API key: ${process.env.EXA_API_KEY ? '✅ loaded' : '❌ missing (add to backend/.env)'}`);
+    console.log(`   Gemini API key: ${process.env.GEMINI_API_KEY ? '✅ loaded' : '❌ missing (add to backend/.env)'}`);
   });
 } else {
   app.listen(PORT, () => {
     console.log(`🚀 Wandr backend running on http://localhost:${PORT}`);
     console.log(`   Exa API key: ${process.env.EXA_API_KEY ? '✅ loaded' : '❌ missing'}`);
     console.log(`   GMI API key: ${process.env.GMI_API_KEY ? '✅ loaded' : '❌ missing'}`);
+    console.log(`   Gemini API key: ${process.env.GEMINI_API_KEY ? '✅ loaded' : '❌ missing'}`);
   });
 }
 
