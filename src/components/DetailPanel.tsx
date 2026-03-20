@@ -5,9 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Loader2, Key, Info, ChevronRight } from 'lucide-react';
+import { X, Loader2, ChevronRight } from 'lucide-react';
 import { Landmark } from '../data/landmarks';
-import { GoogleGenAI, Type } from "@google/genai";
 
 interface ArchitecturalMetadata {
   location: {
@@ -44,15 +43,6 @@ interface DetailPanelProps {
   totalInSequence: number;
 }
 
-declare global {
-  interface Window {
-    aistudio: {
-      hasSelectedApiKey: () => Promise<boolean>;
-      openSelectKey: () => Promise<void>;
-    };
-  }
-}
-
 export const DetailPanel: React.FC<DetailPanelProps> = ({ 
   landmark, 
   onClose,
@@ -64,178 +54,49 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
   const [metadata, setMetadata] = useState<ArchitecturalMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasApiKey, setHasApiKey] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkKey = async () => {
-      if (window.aistudio) {
-        const hasKey = await window.aistudio.hasSelectedApiKey();
-        setHasApiKey(hasKey);
-      }
-    };
-    checkKey();
-  }, [landmark]);
-
-  useEffect(() => {
-    if (landmark && hasApiKey) {
+    if (landmark) {
       generateContent();
     } else {
       setBlueprintUrl(null);
       setMetadata(null);
       setError(null);
     }
-  }, [landmark, hasApiKey]);
+  }, [landmark]);
 
   const generateContent = async () => {
     if (!landmark) return;
-    
+
     setIsLoading(true);
     setError(null);
     setBlueprintUrl(null);
     setMetadata(null);
 
-    const withRetry = async <T,>(
-      fn: () => Promise<T>,
-      maxRetries: number = 3,
-      initialDelay: number = 2000
-    ): Promise<T> => {
-      let lastError: any;
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          return await fn();
-        } catch (err: any) {
-          lastError = err;
-          const errorMessage = err.message || "";
-          const isTransient = 
-            errorMessage.includes("503") || 
-            errorMessage.includes("UNAVAILABLE") ||
-            errorMessage.includes("high demand") ||
-            err.status === 503;
-          
-          if (!isTransient || i === maxRetries - 1) {
-            throw err;
-          }
-          
-          const delay = initialDelay * Math.pow(2, i);
-          console.warn(`Retrying API call (${i + 1}/${maxRetries}) after ${delay}ms due to: ${errorMessage}`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-      throw lastError;
-    };
-
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
-      // Parallel generation of image and metadata with retry logic
-      const [imageResponse, textResponse] = await Promise.all([
-        withRetry(() => ai.models.generateContent({
-          model: 'gemini-3-pro-image-preview',
-          contents: {
-            parts: [{ text: `High-detail axonometric (isometric) architectural technical drawing of ${landmark.name} in ${landmark.region}. True isometric projection with no perspective distortion. Architectural massing, detailed facade systems, structural elements, and roof details. Precise, clean, soft blue-gray linework on an aged parchment drafting paper background with subtle grain. Very light washes for surfaces. Minimal technical annotations like section markers, grid hints, and scale references in drafting-style typography. Centered composition with comfortable margins. Archival museum-grade quality, technical precision, calm and timeless aesthetic. No photorealism, no heavy shadows, no perspective.` }],
-          },
-          config: {
-            imageConfig: {
-              aspectRatio: "16:9",
-              imageSize: "1K"
-            }
-          },
-        })),
-        withRetry(() => ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
-          contents: `Provide a concise but authoritative architectural description for the landmark: ${landmark.name} (Region: ${landmark.region}, Year: ${landmark.construction_year_start}). Use a scholarly, museum-grade tone.`,
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                location: {
-                  type: Type.OBJECT,
-                  properties: {
-                    country: { type: Type.STRING },
-                    cityRegion: { type: Type.STRING },
-                    geographicRegion: { type: Type.STRING },
-                  },
-                  required: ["country", "cityRegion", "geographicRegion"],
-                },
-                period: {
-                  type: Type.OBJECT,
-                  properties: {
-                    yearBuilt: { type: Type.STRING },
-                    era: { type: Type.STRING },
-                  },
-                  required: ["yearBuilt", "era"],
-                },
-                influences: {
-                  type: Type.OBJECT,
-                  properties: {
-                    styles: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    influences: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    traditions: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  },
-                  required: ["styles", "influences", "traditions"],
-                },
-                purpose: {
-                  type: Type.OBJECT,
-                  properties: {
-                    function: { type: Type.STRING },
-                    patron: { type: Type.STRING },
-                    intent: { type: Type.STRING },
-                  },
-                  required: ["function", "patron", "intent"],
-                },
-                significance: {
-                  type: Type.OBJECT,
-                  properties: {
-                    importance: { type: Type.STRING },
-                    innovations: { type: Type.STRING },
-                    influence: { type: Type.STRING },
-                  },
-                  required: ["importance", "innovations", "influence"],
-                },
-              },
-              required: ["location", "period", "influences", "purpose", "significance"],
-            },
-          },
-        }))
-      ]);
+      const response = await fetch('/api/landmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: landmark.name,
+          region: landmark.region,
+          constructionYear: String(landmark.construction_year_start),
+        }),
+      });
 
-      // Handle Image
-      let foundImage = false;
-      for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
-        if (part.inlineData) {
-          const imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-          setBlueprintUrl(imageUrl);
-          foundImage = true;
-          break;
-        }
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(err.error || `Server error: ${response.status}`);
       }
 
-      // Handle Metadata
-      if (textResponse.text) {
-        setMetadata(JSON.parse(textResponse.text));
-      }
-
-      if (!foundImage) {
-        throw new Error("No blueprint image was generated. Please try again.");
-      }
+      const data = await response.json();
+      setBlueprintUrl(`data:${data.mimeType};base64,${data.imageBase64}`);
+      setMetadata(data.metadata);
     } catch (err: any) {
       console.error("Content generation error:", err);
-      if (err.message?.includes("Requested entity was not found")) {
-        setHasApiKey(false);
-        setError("API Key session expired or invalid. Please reconnect.");
-      } else {
-        setError(err.message || "Failed to generate archival records.");
-      }
+      setError(err.message || "Failed to generate archival records.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleConnectKey = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-      setHasApiKey(true); // Assume success as per guidelines
     }
   };
 
@@ -298,10 +159,10 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
                 <div className="p-8 text-center space-y-4">
                   <p className="text-red-600 font-mono text-xs">{error}</p>
                   <button 
-                    onClick={hasApiKey ? generateContent : handleConnectKey}
+                    onClick={generateContent}
                     className="px-4 py-2 bg-charcoal text-parchment font-mono text-[10px] uppercase tracking-widest rounded hover:bg-black transition-colors"
                   >
-                    {hasApiKey ? "Retry Generation" : "Connect Archive"}
+                    Retry Generation
                   </button>
                 </div>
               ) : blueprintUrl ? (
@@ -312,28 +173,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
                   alt={`${landmark.name} 3D Axonometric`}
                   className="w-full h-full object-cover mix-blend-multiply"
                 />
-              ) : !hasApiKey ? (
-                <div className="p-8 text-center space-y-6">
-                  <div className="flex justify-center">
-                    <Key size={48} className="text-charcoal/20" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="font-serif text-xl italic text-charcoal">Archive Connection Required</h3>
-                    <p className="text-charcoal/60 text-sm max-w-xs mx-auto">
-                      Access to the high-fidelity architectural archives requires a verified Gemini API key.
-                    </p>
-                  </div>
-                  <button 
-                    onClick={handleConnectKey}
-                    className="px-6 py-3 bg-charcoal text-parchment font-mono text-[10px] uppercase tracking-widest rounded-full hover:bg-black transition-all transform hover:scale-105"
-                  >
-                    Connect Archive
-                  </button>
-                  <div className="flex items-center justify-center gap-2 text-[10px] text-charcoal/40 font-mono uppercase">
-                    <Info size={12} />
-                    <span>Requires a paid Google Cloud project</span>
-                  </div>
-                </div>
               ) : null}
               
               {/* Overlay Label */}

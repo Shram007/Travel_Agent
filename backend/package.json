@@ -10,6 +10,7 @@
     "test:exa": "tsx src/exa/test.ts"
   },
   "dependencies": {
+    "@google/genai": "^1.46.0",
     "cors": "^2.8.6",
     "dotenv": "^16.0.0",
     "exa-js": "^1.1.5",

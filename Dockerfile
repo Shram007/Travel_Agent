@@ -2,8 +2,11 @@
 # Builds the Vite React SPA and serves it with Nginx.
 #
 # Usage:
-#   docker build --build-arg GEMINI_API_KEY="..." --build-arg EXA_API_KEY="..." -f Dockerfile -t wandr-frontend .
+#   docker build --build-arg EXA_API_KEY="..." -f Dockerfile -t wandr-frontend .
 #   docker run -p 80:80 wandr-frontend
+#
+# Note: GEMINI_API_KEY is NOT a build argument here — it is a runtime secret
+# for the backend service only and must never be baked into the client bundle.
 
 # ── Build stage ──────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -16,12 +19,10 @@ RUN npm ci
 # Copy source and build
 COPY . .
 
-# We expect API keys as build arguments so Vite can bake them into the static bundle
-ARG GEMINI_API_KEY
+# Only non-sensitive, frontend-specific build args are accepted here
 ARG EXA_API_KEY
 ARG GMI_API_KEY
 
-ENV VITE_GEMINI_API_KEY=$GEMINI_API_KEY
 ENV VITE_EXA_API_KEY=$EXA_API_KEY
 ENV VITE_GMI_API_KEY=$GMI_API_KEY
 
